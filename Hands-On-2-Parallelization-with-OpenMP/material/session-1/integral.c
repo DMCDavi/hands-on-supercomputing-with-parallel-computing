@@ -28,6 +28,7 @@ double integral(double a, double b, int n)
 
    h = (b - a) / n;
 
+   #pragma omp parallel for private(i)
    for (i = 0; i < n; i++)
    {
       s += f(a + h * (i + 0.5));
