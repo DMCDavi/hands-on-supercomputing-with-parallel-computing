@@ -27,6 +27,9 @@ int is_prime(big_integer n)
   {
     sq_root = sqrt(n);
 
+	// Quando é redução a paralelização é com reduction.
+	// Usar -pg para gerar relatorio na execução e gprof para converter o relatorio
+	#pragma omp parallel for private(i)
     for (big_integer i = 3; result && i <= sq_root; i += 2)
       result = n % i != 0;
   }
