@@ -139,6 +139,8 @@ int apply_filter(int steps, int radius, struct pixel **src, struct pixel **dst, 
     for (j = -radius; j <= radius; j++)
       filter_block[i + radius][j + radius] = (radius - abs(i)) * (radius - abs(i)) + (radius - abs(j)) * (radius - abs(j)) + 1;
 
+  // Temos que entender quais variaveis serão privadas, pois uma thread não pode interferir na outra.
+  #pragma omp parallel private(s,i,j,k,l)
   for (s = 0; s < steps; s++)
   {
     for (i = 0; i < width; i++)
