@@ -11,6 +11,7 @@ HowToExecute:   ./mm    <size>
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <omp.h>
 
 void initializeMatrix(int *matrix, int size)
 {
@@ -30,29 +31,28 @@ void printMatrix(int *matrix, int size)
   printf("\n");
 }
 
-int main (int argc, char **argv)
-{
-
- int size = atoi(argv[1]);  
- int i, j, k;
-
- int  *A = (int *) malloc (sizeof(int)*size*size);
- int  *B = (int *) malloc (sizeof(int)*size*size);
- int  *C = (int *) malloc (sizeof(int)*size*size);
-
- initializeMatrix(A, size);
- initializeMatrix(B, size);
-
- for(i = 0; i < size; i++)
-  for(j = 0; j < size; j++)
-    for(k = 0; k < size; k++)
-       C[i * size + j] += A[i * size + k] * B[k * size + j];
-
- printMatrix(A,size);
- printMatrix(B,size);
- printMatrix(C,size);
-
- return 0;
-
+int main(int argc, char **argv) {
+	int size = atoi(argv[1]);
+	int nth = atoi(argv[2]);
+	int i, j, k;
+	double t1, t2;
+	omp_set_num_threads(nth);
+	
+	int *A = (int *) malloc (sizeof(int)*size*size);
+	int *B = (int *) malloc (sizeof(int)*size*size);
+	int *C = (int *) malloc (sizeof(int)*size*size);
+	
+	initializeMatrix(A, size);
+	initializeMatrix(B, size);
+	t1 = omp_get_wtime();
+	#pragma omp parallel for private(i,j,k)
+	for(i=0;i<size;i++)
+		for(j=0;j<size;j++)
+			for(k=0;k<size;k++)
+				C[i*size+j] += A[i*size+k] * B[k*size+j];
+	t2 = omp_get_wtime();
+	
+	printf("%d \t %f", size, t2-t1);
+	
+	return 0;
 }
-
