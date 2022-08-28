@@ -12,13 +12,13 @@ HowToExecute:   OMP_NUM_THREADS=${num_threads} ./image
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <omp.h>
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define MAXCAD 100
 
-#define NUM_STEPS 5
-#define RADIUS 8
+#define NUM_STEPS 10
+#define RADIUS 12
 #define INPUT_IMAGE "lenna.ppm"
 #define OUTPUT_IMAGE "lenna-fil.ppm"
 
@@ -132,27 +132,29 @@ int apply_filter(int steps, int radius, struct pixel **src, struct pixel **dst, 
     printf("failed allocating memory for the filter block\n");
     exit(-1);
   }
-  for (i = 1; i < 2 * (radius + 1); i++)
-    filter_block[i] = filter_block[i - 1] + 2 * (radius + 1);
-
+  
   for (i = -radius; i <= radius; i++)
     for (j = -radius; j <= radius; j++)
       filter_block[i + radius][j + radius] = (radius - abs(i)) * (radius - abs(i)) + (radius - abs(j)) * (radius - abs(j)) + 1;
 
   // Temos que entender quais variaveis serão privadas, pois uma thread não pode interferir na outra.
-  #pragma omp parallel private(s,i,j,k,l)
+  //#pragma omp parallel for 
   for (s = 0; s < steps; s++)
   {
+    //#pragma omp parallel for private(i)
     for (i = 0; i < width; i++)
     {
+      //#pragma omp parallel for private(j)
       for (j = 0; j < height; j++)
       {
         result.r = 0;
         result.g = 0;
         result.b = 0;
         total = 0;
+        //#pragma omp parallel for shared(k)
         for (k = max(0, i - radius); k <= min(width - 1, i + radius); k++)
         {
+          //#pragma omp parallel for reduction(+:total)
           for (l = max(0, j - radius); l <= min(height - 1, j + radius); l++)
           {
             filter_factor = filter_block[k - i + radius][l - j + radius];
@@ -180,12 +182,17 @@ int apply_filter(int steps, int radius, struct pixel **src, struct pixel **dst, 
 
 int main()
 {
+  double start; 
+  double end; 
+  start = omp_get_wtime(); 
+
+  
   struct pixel **src_img, **dst_img;
   int width, height;
   int i, result;
-
+  
   result = read_ppm_image(INPUT_IMAGE, &src_img, &width, &height);
-
+  
   dst_img = (struct pixel **)malloc(width * sizeof(struct pixel *));
   dst_img[0] = (struct pixel *)malloc(height * width * sizeof(struct pixel));
   for (i = 1; i < width; i++)
@@ -201,6 +208,7 @@ int main()
   free(dst_img);
 
   printf("filtered image resolution: %dx%d\n", width, height);
-
+  end = omp_get_wtime(); 
+  printf("Work took %f seconds\n", end - start);
   return 0;
 }
