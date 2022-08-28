@@ -33,11 +33,9 @@ void printMatrix(int *matrix, int size)
 
 int main(int argc, char **argv) {
 	int size = atoi(argv[1]);
-	int nth = atoi(argv[2]);
 	int i, j, k;
 	double t1, t2;
-	omp_set_num_threads(nth);
-	
+
 	int *A = (int *) malloc (sizeof(int)*size*size);
 	int *B = (int *) malloc (sizeof(int)*size*size);
 	int *C = (int *) malloc (sizeof(int)*size*size);
@@ -51,8 +49,8 @@ int main(int argc, char **argv) {
 			for(k=0;k<size;k++)
 				C[i*size+j] += A[i*size+k] * B[k*size+j];
 	t2 = omp_get_wtime();
-	
-	printf("%d \t %f", size, t2-t1);
-	
+
+	printf("%d \t %f\n", size, t2 - t1);
+
 	return 0;
 }
