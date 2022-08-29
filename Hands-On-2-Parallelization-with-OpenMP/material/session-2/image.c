@@ -12,12 +12,12 @@ HowToExecute:   OMP_NUM_THREADS=${num_threads} ./image
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
-
+#include <omp.h>
 #define max(a, b) ((a) > (b) ? (a) : (b))
 #define min(a, b) ((a) < (b) ? (a) : (b))
 #define MAXCAD 100
 
-#define NUM_STEPS 5
+#define NUM_STEPS 2
 #define RADIUS 8
 #define INPUT_IMAGE "lenna.ppm"
 #define OUTPUT_IMAGE "lenna-fil.ppm"
@@ -139,8 +139,7 @@ int apply_filter(int steps, int radius, struct pixel **src, struct pixel **dst, 
     for (j = -radius; j <= radius; j++)
       filter_block[i + radius][j + radius] = (radius - abs(i)) * (radius - abs(i)) + (radius - abs(j)) * (radius - abs(j)) + 1;
 
-  // Temos que entender quais variaveis serão privadas, pois uma thread não pode interferir na outra.
-  #pragma omp parallel private(s,i,j,k,l)
+  #pragma omp parallel for private(i,k,l) reduction(+: total) reduction(/: result)
   for (s = 0; s < steps; s++)
   {
     for (i = 0; i < width; i++)
@@ -180,6 +179,10 @@ int apply_filter(int steps, int radius, struct pixel **src, struct pixel **dst, 
 
 int main()
 {
+  double start;
+  double end;
+  start = omp_get_wtime();
+
   struct pixel **src_img, **dst_img;
   int width, height;
   int i, result;
@@ -201,6 +204,7 @@ int main()
   free(dst_img);
 
   printf("filtered image resolution: %dx%d\n", width, height);
-
+  end = omp_get_wtime();
+  printf("Work took %f seconds\n", end - start);
   return 0;
 }
