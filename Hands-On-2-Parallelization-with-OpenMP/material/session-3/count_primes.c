@@ -38,6 +38,7 @@ int main(int argc, char **argv)
 {
   big_integer i, primes = 2;
 
+  #pragma omp parallel for reduction(+:primes) schedule(runtime)
   for (i = 3; i <= TOP_LIMIT; i += 2)
     if (is_prime(i))
       primes++;

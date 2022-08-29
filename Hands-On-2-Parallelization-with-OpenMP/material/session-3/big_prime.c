@@ -16,7 +16,6 @@ HowToExecute:   OMP_NUM_THREADS=${num_threads} ./big_prime
 
 typedef unsigned long long big_integer;
 #define BIGGEST_INTEGER ULLONG_MAX
-#define NUM_THREADS 2
 
 int is_prime(big_integer n)
 {
@@ -29,26 +28,17 @@ int is_prime(big_integer n)
   {
     sq_root = sqrt(n);
     
-    omp_set_num_threads(NUM_THREADS);
-    #pragma omp parallel private(i)
+    omp_set_num_threads(4);
+    // firstprivate é usado para variaveis que foram declaradas antes
+    // sempre que usar a operação and, tem que usar o reduction com &
+    #pragma omp parallel firstprivate(i) reduction(&:result)
     {
-      int id = omp_get_thread_num();
+      i += 2 * omp_get_thread_num();
+      big_integer increment = 2 * omp_get_num_threads();
 
-      if(id == 0)
-      {
-        i = 3;
-        while(result && i <= (big_integer)sq_root/NUM_THREADS){
-          result = n % i != 0;
-          i += 2;
-        }
-      }
-      if(id == 1)
-      {
-        i = (big_integer)sq_root/NUM_THREADS;
-        while(result && i <= 2*sq_root/NUM_THREADS){
-          result = n % i != 0;
-          i += 2;
-        }
+      while (result && i <= sq_root){
+        result = n % i != 0;
+        i += increment;
       }
     }
   }

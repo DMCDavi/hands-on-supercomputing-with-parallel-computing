@@ -139,9 +139,10 @@ int apply_filter(int steps, int radius, struct pixel **src, struct pixel **dst, 
     for (j = -radius; j <= radius; j++)
       filter_block[i + radius][j + radius] = (radius - abs(i)) * (radius - abs(i)) + (radius - abs(j)) * (radius - abs(j)) + 1;
 
-  #pragma omp parallel for private(i,k,l) reduction(+: total) reduction(/: result)
+  
   for (s = 0; s < steps; s++)
   {
+    #pragma omp parallel for private(i,j,k,l,total,result,filter_factor)
     for (i = 0; i < width; i++)
     {
       for (j = 0; j < height; j++)
