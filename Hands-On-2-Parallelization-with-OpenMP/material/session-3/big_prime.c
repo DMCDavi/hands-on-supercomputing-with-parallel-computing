@@ -1,4 +1,3 @@
-%%writefile big_prime.c
 /*
 File:           big_prime.c
 Last changed:   20220303 11:35:00
