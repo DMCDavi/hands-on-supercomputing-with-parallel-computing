@@ -24,14 +24,19 @@ double f(double x)
 double calculate_integral_1(double a, double b, int n) 
 { 
    double h, s = 0, result;
+   double t1, t2;
    int i;
    
    h = (b - a) / n;
 
+   t1 = omp_get_wtime();
    #pragma omp parallel for reduction(+:s)
    for (i = 0; i < n; i++) { 
-   s += f(a + h * (i + 0.5)); 
+      s += f(a + h * (i + 0.5)); 
    } 
+   t2 = omp_get_wtime();
+   printf("Tempo: %f seg\n", t2 - t1);
+
    result = h * s; 
    return result; 
 }
@@ -43,7 +48,7 @@ int main(int argc, char *argv[])
    
    result = calculate_integral_1(0, 1, steps);
   
-   printf("%f\n", result);
+   printf("Resultado: %f\n", result);
 
    return 0;
 }
