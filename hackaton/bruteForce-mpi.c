@@ -25,7 +25,7 @@ long long my_pow(long long x, int y)
     return x * my_pow(x, y-1);
 }
 
-void bruteForce(char *pass) 
+void bruteForce(char *pass, int base, int size, long long int min, long long int max) 
 {
   char force[MAXIMUM_PASSWORD];
   int palavra[MAXIMUM_PASSWORD];
@@ -33,14 +33,9 @@ void bruteForce(char *pass)
     
   long long int j;
   long long int pass_decimal = 0;
-  int base = END_CHAR - START_CHAR + 2;
-
-  int size = strlen(pass);
 
   for(int i = 0; i < MAXIMUM_PASSWORD; i++)
     force[i] = '\0';
-
-  printf("Try to broke the password: %s\n", pass);
 
   for(int i = 0; i < size; i++)
     pass_b26[i] = (int) pass[i] - START_CHAR + 1; 
@@ -48,10 +43,9 @@ void bruteForce(char *pass)
   for(int i = size - 1; i > -1; i--)
     pass_decimal += (long long int) pass_b26[i] * my_pow(base, i);
 
-  long long int max = my_pow(base, size);
   char s[MAXIMUM_PASSWORD];
 
-  for(j = 0; j < max; j++){
+  for(j = min; j < max; j++){
     if(j == pass_decimal){
       printf("Found password!\n");
       int index = 0;
@@ -70,7 +64,7 @@ void bruteForce(char *pass)
       dif = difftime (t2, t1);
       printf("\n%1.2f seconds\n", dif);
 
-      exit(0);
+      MPI_Abort(MPI_COMM_WORLD, MPI_SUCCESS);
     }
   }
 
@@ -90,9 +84,23 @@ int main(int argc, char **argv)
   char password[MAXIMUM_PASSWORD];
   strcpy(password, argv[1]);
 
+  int base = END_CHAR - START_CHAR + 2;
+  int size = strlen(password);
+  long long int max = my_pow(base, size);
+  long long int partialMax = max / numtasks;
+  long long int taskMin = taskid * partialMax;
+  long long int taskMax = (taskid + 1) * partialMax;
+  int rest = max % numtasks;
+
+  if (taskid == MASTER) {
+    printf("Try to broke the password: %s\n", password);
+  } 
+  
   time (&t1);
-  if(taskid == MASTER){
-    bruteForce(password);
+  if (rest && taskid == numtasks - 1) {
+    bruteForce(password, base, size, taskMin, taskMax + rest);
+  } else {
+    bruteForce(password, base, size, taskMin, taskMax);
   }
 
   MPI_Finalize();
