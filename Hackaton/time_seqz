@@ -1,0 +1,4 @@
+Senha (Entradas) | Sequencial | OpenMP | MPI  | Híbrido | CUDA
+(7z) zzzzzzz     |     3      |   1.00 | 1.00 |    1.00 | 1.00
+(8z) zzzzzzzz     |     75      |   2.00 | 3.00 |    6.00 | 1.00
+(9z) zzzzzzzzz     |     2000      |   72.00 | 72.00 |    144.00 | 5.00

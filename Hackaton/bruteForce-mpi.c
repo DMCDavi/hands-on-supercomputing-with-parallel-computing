@@ -4,7 +4,6 @@
 #include <time.h>
 #include <math.h>
 #include <mpi.h>
-#include <omp.h>
 
 //97 to 122 use only lowercase letters
 //65 to 90 use only capital letters
@@ -26,7 +25,7 @@ long long my_pow(long long x, int y)
     return x * my_pow(x, y-1);
 }
 
-void bruteForce(char *pass, int base, int size, long long int min, long long int max) 
+void bruteForce(char *pass, int base, int size, long long int min, long long int max, int numtasks) 
 {
   int pass_b26[MAXIMUM_PASSWORD];
     
@@ -41,25 +40,22 @@ void bruteForce(char *pass, int base, int size, long long int min, long long int
 
   char s[MAXIMUM_PASSWORD];
 
-  #pragma omp parallel for private(j)
   for(j = min; j < max; j++){
     if(j == pass_decimal){
-      // printf("Found password!\n");
+     
       int index = 0;
 
-      // printf("Password in decimal base: %lli\n", j);
+  
       while(j > 0){
-        s[index++] = 'a' + j%base-1;
+        s[index++] = START_CHAR + j%base-1;
         j /= base;
       }
       s[index] = '\0';
 
-      // printf("Found password: %s\n", s);
-
       time (&t2);
       double dif;
       dif = difftime (t2, t1);
-      printf("%1.2f\n", dif);
+      printf("%s\t%d\t%1.2f\n", s, numtasks, dif);
 
       MPI_Abort(MPI_COMM_WORLD, MPI_SUCCESS);
     }
@@ -88,17 +84,13 @@ int main(int argc, char **argv)
   long long int taskMin = taskid * partialMax;
   long long int taskMax = (taskid + 1) * partialMax;
   int rest = max % numtasks;
-
-  if (taskid == MASTER) {
-    printf("P%dT%d;", numtasks, omp_get_num_threads());
-  } 
   
   time (&t1);
   if (rest && taskid == numtasks - 1) {
     // Se houver resto da divisão, acrescenta no intervalo do último processo
-    bruteForce(password, base, size, taskMin, taskMax + rest);
+    bruteForce(password, base, size, taskMin, taskMax + rest, numtasks);
   } else {
-    bruteForce(password, base, size, taskMin, taskMax);
+    bruteForce(password, base, size, taskMin, taskMax, numtasks);
   }
 
   MPI_Finalize();

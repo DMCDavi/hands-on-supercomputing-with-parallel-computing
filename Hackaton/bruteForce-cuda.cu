@@ -65,17 +65,15 @@ __global__ void bruteForce(char * pass) {
   // Uma única thread processa mais de um dado
   while (j < max) {
     if (j == pass_decimal) {
-      // printf("Found password!\n");
+   
       int index = 0;
 
-      // printf("Password in decimal base: %lli\n", j);
       while (j > 0) {
-        s[index++] = 'a' + j % base - 1;
+        s[index++] = START_CHAR + j % base - 1;
         j /= base;
       }
       s[index] = '\0';
 
-      // printf("Found password: %s\n", s);
       break;
     }
     // Calcula o stride pela multiplicação entre a quantidade de blocos e threads 
@@ -101,7 +99,6 @@ int main(int argc, char ** argv) {
   int number_of_blocks = numberOfSMs * BLOCKS_PER_SM;
   int threads_per_block = MAX_THREADS_PER_BLOCK;
 
-  // printf("Try to broke the password: %s\n", password);
 
   time( & t1);
   bruteForce <<< number_of_blocks, threads_per_block >>> (password);
@@ -110,7 +107,7 @@ int main(int argc, char ** argv) {
   time( & t2);
 
   dif = difftime(t2, t1);
-  printf("B%dT%d;%1.2f\n", number_of_blocks, threads_per_block, dif);
+  printf("%s\tB%d/T%d\t%1.2f\n", password, number_of_blocks, threads_per_block, dif);
 
   checkCuda( cudaFree(password) );
 
